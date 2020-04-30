@@ -126,7 +126,7 @@ int main(int argc, char* argv[]) {
 
 		std::cout << currentStep << '/' << maxSteps << '\r';
 
-		text.setString("Speed: " + std::to_string((int)std::floor(speed*100)) + "%\nScale: " + std::to_string((int)std::floor(textScale*100)) + "%");
+		text.setString("Speed: " + std::to_string((int)std::floor(speed*100)) + "%\nScale: " + std::to_string((int)std::floor(textScale*100)) + "%\nTime: " + std::to_string(std::ceil((currentStep/ups)*100)/100).substr(0, 4) + "s/" + std::to_string((int)maxSteps/ups) + "s");
 		window.setView(window.getDefaultView());
 		window.draw(text);
 
