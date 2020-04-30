@@ -55,10 +55,10 @@ int main(int argc, char** argv) {
 
 	//Testing
 
-	for (int y = 0; y < 20; y++) {
-		for (int x = 0; x < 20; x++) {
+	for (int y = 0; y < 40; y++) {
+		for (int x = 0; x < 40; x++) {
 			Particle new_particle;
-			new_particle.position = Vec2D(x * 15 + 200, y * 15 + 200);
+			new_particle.position = Vec2D(x * 7.5 + 200, y * 7.5 + 200);
 			particles.push_back(new_particle);
 		}
 	}
@@ -72,9 +72,11 @@ int main(int argc, char** argv) {
 	output_file.write((char*)&ups, sizeof(int));
 
 	for (currentStep = 0; currentStep < maxStep; currentStep++) {
-		for (auto& i : particles) {
-			i.applyGravity(20, particles);
-			i.updatePhysics(timeStep);
+		for (int i = 0; i < particles.size(); i++) {
+			particles[i].applyGravity(20, particles);
+			particles[i].applyCollision(particles, i);
+
+			particles[i].updatePhysics(timeStep);
 		}
 
 		for (auto& i : particles) {

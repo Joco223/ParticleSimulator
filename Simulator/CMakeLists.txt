@@ -10,7 +10,7 @@ include_directories(include)
 file(GLOB SOURCES "source/*.cpp")
 
 #Cpp version
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 
 #Cpp flags
 set(CMAKE_CXX_FLAGS "-O3")
