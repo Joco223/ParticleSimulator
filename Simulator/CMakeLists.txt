@@ -13,7 +13,7 @@ file(GLOB SOURCES "source/*.cpp")
 set(CMAKE_CXX_STANDARD 20)
 
 #Cpp flags
-set(CMAKE_CXX_FLAGS "-O3")
+set(CMAKE_CXX_FLAGS "-O3 -ffast-math -march=native")
 
 #Executable
 add_executable(Simulator ${SOURCES})

@@ -1,11 +1,14 @@
 #include "CfgParser.h"
 #include "Particle.h"
+#include "QuadTree.h"
+#include "Vec2D.h"
 
 #include <iostream>
 #include <unordered_map>
 #include <variant>
 #include <algorithm>
 #include <fstream>
+#include <chrono>
 
 std::vector<bool> required_config = {
 	false, //UPS
@@ -51,17 +54,20 @@ int main(int argc, char** argv) {
 	int ups = std::get<int>(find_element(values, "updatesPerSecond").value);
 	int maxStep = ups * std::get<int>(find_element(values, "simulationTime").value);
 	double timeStep = 1.0 / (double)ups;
-	std::vector<Particle> particles;
+	std::vector<Particle*> particles;
 
 	//Testing
 
 	for (int y = 0; y < 40; y++) {
 		for (int x = 0; x < 40; x++) {
-			Particle new_particle;
-			new_particle.position = Vec2D(x * 7.5 + 200, y * 7.5 + 200);
+			Particle* new_particle = new Particle;
+			Vec2D pos = Vec2D(x * 7.5 + 200, y * 7.5 + 200);
+			new_particle->position = pos;
+			new_particle->id = y * 40 + x;
+			new_particle->radius = 1;
 			particles.push_back(new_particle);
 		}
-	}
+	}	
 
 	//Not testing anymore
 
@@ -71,18 +77,35 @@ int main(int argc, char** argv) {
 	output_file.write((char*)&particleCount, sizeof(int));
 	output_file.write((char*)&ups, sizeof(int));
 
+	auto startTime = std::chrono::system_clock::now();
+
 	for (currentStep = 0; currentStep < maxStep; currentStep++) {
-		for (int i = 0; i < particles.size(); i++) {
-			particles[i].applyGravity(20, particles);
-			particles[i].applyCollision(particles, i);
-
-			particles[i].updatePhysics(timeStep);
-		}
-
+		QuadTree qt({Vec2D(0, 0), Vec2D(1280, 720)});
+	
 		for (auto& i : particles) {
-			output_file.write((char*)&i.position.x, sizeof(double));
-			output_file.write((char*)&i.position.y, sizeof(double));
+			qt.insert(i);
 		}
+		
+		for (int i = 0; i < particles.size(); i++) {
+			Rect target = {particles[i]->position, Vec2D(particles[i]->radius*3, particles[i]->radius*3)};
+			std::vector<Particle*> neighbours = qt.query(target);
+
+			particles[i]->applyGravity(10, particles, i);			
+			particles[i]->applyCollision(neighbours);
+			particles[i]->updatePhysics(timeStep);			
+		}
+
+		for (auto i : particles) {
+			output_file.write((char*)&i->position.x, sizeof(double));
+			output_file.write((char*)&i->position.y, sizeof(double));
+		}
+
+		/*if (currentStep % 100 == 0) {
+			auto endTime = std::chrono::system_clock::now();
+			std::chrono::duration<double, std::milli> duration = endTime - startTime;
+			std::cout << "Time for 100 steps: " << duration.count() << "ms\n";
+			startTime = endTime;
+		}*/
 
 		std::cout << (currentStep+1) << '/' << maxStep << '\r'; 
 	}

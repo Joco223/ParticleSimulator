@@ -76,6 +76,10 @@ public:
 		return *this;
 	}
 
+	double rawLen() const {
+		return x*x+y*y;
+	}
+
 	double len() const {
 		return std::sqrt(x*x + y*y);
 	}
@@ -88,6 +92,25 @@ public:
 
 	double dist(const Vec2D& other) const {
 		return Vec2D(x - other.x, y - other.y).len();
+	}
+
+	double rawDist(const Vec2D& other) const {
+		return Vec2D(x - other.x , y - other.y).rawLen();
+	}
+
+	float inverseSquareRoot(float x) { 
+		float xhalf = 0.5f*x; 
+		int i = *(int*)&x; 
+		i = 0x5f3759d5 - (i >> 1); 
+		x = *(float*)&i; 
+		x = x*(1.5f - xhalf*x*x); 
+		return x; 
+	}
+
+	Vec2D& fastNorm() {
+		float invSqr = inverseSquareRoot(rawLen());
+		*this *= invSqr;
+		return *this;
 	}
 
 	static double dot(const Vec2D& v1, const Vec2D& v2) {
