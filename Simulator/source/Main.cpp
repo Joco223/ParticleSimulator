@@ -2,10 +2,9 @@
 #include "Particle.h"
 #include "QuadTree.h"
 #include "Vec2D.h"
+#include "Physics.h"
 
 #include <iostream>
-#include <unordered_map>
-#include <variant>
 #include <algorithm>
 #include <fstream>
 #include <chrono>
@@ -58,12 +57,12 @@ int main(int argc, char** argv) {
 
 	//Testing
 
-	for (int y = 0; y < 40; y++) {
-		for (int x = 0; x < 40; x++) {
+	for (int y = 0; y < 20; y++) {
+		for (int x = 0; x < 20; x++) {
 			Particle* new_particle = new Particle;
 			Vec2D pos = Vec2D(x * 7.5 + 200, y * 7.5 + 200);
 			new_particle->position = pos;
-			new_particle->id = y * 40 + x;
+			new_particle->id = y * 20 + x;
 			new_particle->radius = 1;
 			particles.push_back(new_particle);
 		}
@@ -85,15 +84,14 @@ int main(int argc, char** argv) {
 		for (auto& i : particles) {
 			qt.insert(i);
 		}
-		
-		for (int i = 0; i < particles.size(); i++) {
-			Rect target = {particles[i]->position, Vec2D(particles[i]->radius*3, particles[i]->radius*3)};
-			std::vector<Particle*> neighbours = qt.query(target);
 
-			particles[i]->applyGravity(10, particles, i);			
-			particles[i]->applyCollision(neighbours);
-			particles[i]->updatePhysics(timeStep);			
+		applyGravity(particles, 10);
+		
+		for (int i = 0; i < particles.size(); i++) {			
+			particles[i]->updatePhysics(timeStep);
 		}
+
+		resolveCollisions(particles, qt);
 
 		for (auto i : particles) {
 			output_file.write((char*)&i->position.x, sizeof(double));

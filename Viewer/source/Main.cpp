@@ -20,7 +20,7 @@ int main(int argc, char* argv[]) {
 	std::vector<std::vector<Vec2D>> particles = loadFile(argv[1], ups, maxSteps, particleCount);
 	if (particles.size() == 0) return -1;
 
-	sf::RenderWindow window(sf::VideoMode(1280, 720), "Particle Simulator Viewer");
+	sf::RenderWindow window(sf::VideoMode(800, 600), "Particle Simulator Viewer");
 	window.setFramerateLimit(ups);
 
 	sf::View camera = window.getDefaultView();
