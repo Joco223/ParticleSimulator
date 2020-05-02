@@ -5,7 +5,7 @@
 
 #include "Vec2D.h"
 
-std::vector<std::vector<Vec2D>> loadFile(const std::string input, int& ups, int& maxSteps, int& particleCount) {
+std::vector<std::vector<Vec2D>> loadFile(const std::string input, int& ups, int& maxSteps, int& particleCount, std::vector<double>& radii) {
 	std::vector<std::vector<Vec2D>> particles;
 	
 	std::ifstream input_file(input, std::ios::in);
@@ -17,6 +17,12 @@ std::vector<std::vector<Vec2D>> loadFile(const std::string input, int& ups, int&
 	input_file.read((char*)&maxSteps, sizeof(int));
 	input_file.read((char*)&particleCount, sizeof(int));
 	input_file.read((char*)&ups, sizeof(int));
+
+	for (int i = 0; i < particleCount; i++) {
+		double r;
+		input_file.read((char*)&r, sizeof(double));
+		radii.push_back(r);
+	}
 
 	for (int i = 0; i < maxSteps; i++) {
 		std::vector<Vec2D> currentStep;

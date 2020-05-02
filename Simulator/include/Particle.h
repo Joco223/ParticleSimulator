@@ -12,6 +12,7 @@ public:
 	double mass, radius;
 	int type = 0; //Will be used later on for visualizer
 	int id;
+	bool affectedByGravity = true;
 
 	Particle();
 	Particle(Vec2D position_, int id_) : position(position_), id(id_) {}

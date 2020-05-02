@@ -57,16 +57,25 @@ int main(int argc, char** argv) {
 
 	//Testing
 
-	for (int y = 0; y < 20; y++) {
-		for (int x = 0; x < 20; x++) {
+	for (int y = 0; y < 40; y++) {
+		for (int x = 0; x < 40; x++) {
 			Particle* new_particle = new Particle;
 			Vec2D pos = Vec2D(x * 7.5 + 200, y * 7.5 + 200);
 			new_particle->position = pos;
-			new_particle->id = y * 20 + x;
+			new_particle->id = y * 40 + x;
 			new_particle->radius = 1;
 			particles.push_back(new_particle);
 		}
-	}	
+	}
+
+	Particle* bigParticle = new Particle;
+	bigParticle->position = Vec2D(-1500, 355);
+	bigParticle->mass = 15000;
+	bigParticle->radius = 15;
+	bigParticle->id = 2000;
+	bigParticle->affectedByGravity = false;	
+	bigParticle->velocity = Vec2D(200, 0);
+	particles.push_back(bigParticle);
 
 	//Not testing anymore
 
@@ -75,6 +84,10 @@ int main(int argc, char** argv) {
 	int particleCount = particles.size();
 	output_file.write((char*)&particleCount, sizeof(int));
 	output_file.write((char*)&ups, sizeof(int));
+
+	for (auto i : particles) {
+		output_file.write((char*)&i->radius, sizeof(double));
+	}
 
 	auto startTime = std::chrono::system_clock::now();
 
