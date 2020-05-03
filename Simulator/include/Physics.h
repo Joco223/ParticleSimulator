@@ -13,7 +13,7 @@ void resolveCollisions(std::vector<Particle*>& particles, QuadTree& qt) {
 
 	//Resolve static collision
 	for (auto i : particles) {
-		Rect target = {i->position, Vec2D(i->radius*20 + 0.5, i->radius*20 + 0.5)};
+		Rect target = {i->position, Vec2D(i->radius + 21, i->radius + 21)};
 		std::vector<Particle*> neighbours = qt.query(target);
 		for (auto j : neighbours) {
 			if (i->id != j->id) {
@@ -34,6 +34,14 @@ void resolveCollisions(std::vector<Particle*>& particles, QuadTree& qt) {
 					j->position.y += offsetY;
 				}
 			}
+		}
+
+		if (i->simTimeRemaining > 0.0) {
+			double intentedSpeed = i->velocity.len();
+			double intentedDist = intentedSpeed * i->simTimeRemaining;
+			double actualDist = (i->position - i->oldPosition).len();
+			double actualTime = actualDist / intentedSpeed;
+			i->simTimeRemaining -= actualTime;
 		}
 	}
 
@@ -84,3 +92,53 @@ void applyGravity(std::vector<Particle*>& particles, double gravConst) {
 		}
 	}
 }
+
+void applyInverseGravity(std::vector<Particle*>& particles, QuadTree& qt, double invGravConst) {
+	for (auto i : particles) {
+		Rect target = {i->position, Vec2D(i->radius + 20, i->radius + 20)};
+		std::vector<Particle*> neighbours = qt.query(target);
+		for (auto j : neighbours) {
+			if (i->id != j->id) {
+				double distance = 2.0 / i->position.dist(j->position);
+				double force = invGravConst * distance;
+				Vec2D accForce = ((i->position - j->position).fastNorm() * force);
+				i->acceleration += accForce;
+			}
+		}
+	}
+}
+
+void applySpringForce(std::vector<Particle*>& particles, QuadTree& qt, double springConstant, double dampingConstant, double equiDistance, double maxDistance, double timeStep) {
+	/*for (auto i : particles) {
+		Rect target = {i->position, Vec2D(i->radius + maxDistance, i->radius + maxDistance)};
+		std::vector<Particle*> neighbours = qt.query(target);
+		for (auto j : neighbours) {
+			if (i->id != j->id) {
+				//double force = -springConstant * (i->position.dist(j->position) - equiDistance) - dampingConstant * (j->velocity - i->velocity).len();
+				double m = (j->mass*i->mass) / (j->mass + i->mass);
+				double force = -(m/(timeStep*timeStep))*springConstant*((i->position-j->position).len() - equiDistance) - (m/timeStep)*dampingConstant*(j->velocity-i->velocity).len();
+				Vec2D accForce = (i->position - j->position).fastNorm() * force;
+				j->acceleration -= accForce;
+			}
+		}
+	}*/
+
+	for (int i = 0; i < particles.size(); i++) {
+		if (particles[i]->affectedBySprings) {
+			for (int j = i + 1; j < particles.size(); j++) {
+				if (particles[j]->affectedBySprings) {
+					double dist = particles[i]->position.dist(particles[j]->position);
+					if (dist < maxDistance) {
+						double m = (particles[j]->mass*particles[i]->mass) / (particles[j]->mass + particles[i]->mass);
+						double force = -(m/(timeStep*timeStep))*springConstant*((particles[i]->position-particles[j]->position).len() - equiDistance) - (m/timeStep)*dampingConstant*(particles[j]->velocity-particles[i]->velocity).len();
+						Vec2D accForce = (particles[i]->position - particles[j]->position).fastNorm() * force;
+						particles[j]->acceleration -= accForce/2;
+						particles[i]->acceleration += accForce/2;
+					}
+				}
+			}
+		}
+	}
+}
+
+// F = -k(|x|-d)(x/|x|) - bv

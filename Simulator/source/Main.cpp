@@ -57,27 +57,34 @@ int main(int argc, char** argv) {
 
 	//Testing
 
-	for (int y = 0; y < 40; y++) {
-		for (int x = 0; x < 40; x++) {
+	for (int y = 0; y < 10; y++) {
+		for (int x = 0; x < 10; x++) {
 			Particle* new_particle = new Particle;
-			Vec2D pos = Vec2D(x * 7.5 + 200, y * 7.5 + 200);
+			Vec2D pos = Vec2D(x * 7.5 + 300, y * 7.5 + 200);
 			new_particle->position = pos;
-			new_particle->id = y * 40 + x;
+			if (x % 2 == 0)
+				new_particle->position += Vec2D(0, 3.75);
+			new_particle->id = y * 10 + x;
 			new_particle->radius = 1;
 			particles.push_back(new_particle);
 		}
 	}
 
-	Particle* bigParticle = new Particle;
-	bigParticle->position = Vec2D(-1500, 355);
-	bigParticle->mass = 15000;
-	bigParticle->radius = 15;
-	bigParticle->id = 2000;
-	bigParticle->affectedByGravity = false;	
-	bigParticle->velocity = Vec2D(200, 0);
-	particles.push_back(bigParticle);
+	Particle* bigOne = new Particle;
+	bigOne->position = Vec2D(100, 215);
+	bigOne->mass = 400;
+	bigOne->radius = 15;
+	bigOne->velocity = Vec2D(250, 0);
+	bigOne->affectedByDrag = false;
+	bigOne->affectedBySprings = false;
+	bigOne->id = 10000;
+	particles.push_back(bigOne);
 
 	//Not testing anymore
+
+	int simulationUpdates = 4;
+	int maxSimulationSteps = 16;
+	double elapsedTime = timeStep / (double)simulationUpdates;
 
 	std::ofstream output_file("output", std::ios::binary);
 	output_file.write((char*)&maxStep, sizeof(int));
@@ -98,13 +105,23 @@ int main(int argc, char** argv) {
 			qt.insert(i);
 		}
 
-		applyGravity(particles, 10);
-		
-		for (int i = 0; i < particles.size(); i++) {			
-			particles[i]->updatePhysics(timeStep);
-		}
+		//applyGravity(particles, 3);
+		applyInverseGravity(particles, qt, 100);
 
-		resolveCollisions(particles, qt);
+		for (int k = 0; k < simulationUpdates; k++) {
+			for (auto i : particles)
+				i->simTimeRemaining = elapsedTime;
+
+			applySpringForce(particles, qt, 0.3, 0.3, 8, 9, elapsedTime);
+
+			for (int j = 0; j < maxSimulationSteps; j++) {
+				for (int i = 0; i < particles.size(); i++) {			
+					particles[i]->updatePhysics(elapsedTime);
+				}
+
+				resolveCollisions(particles, qt);
+			}
+		}
 
 		for (auto i : particles) {
 			output_file.write((char*)&i->position.x, sizeof(double));

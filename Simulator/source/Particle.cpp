@@ -19,7 +19,13 @@ bool Particle::detectCollision(const Particle* other) {
 }
 
 void Particle::updatePhysics(double timeStep) {
-	velocity += (acceleration * (1.0/mass)) * timeStep;
-	position += velocity * timeStep;
-	acceleration = Vec2D();
+	if (simTimeRemaining > 0.0) {
+		oldPosition = position;
+
+		velocity += (acceleration * (1.0/mass)) * simTimeRemaining;
+		if (affectedByDrag)
+			velocity *= 0.98;
+		position += velocity * simTimeRemaining;
+		acceleration = Vec2D();
+	}
 }
