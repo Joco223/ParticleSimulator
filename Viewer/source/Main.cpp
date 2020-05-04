@@ -18,17 +18,18 @@ int main(int argc, char* argv[]) {
 
 	int ups, maxSteps, particleCount;
 	std::vector<double> radii;
-	std::vector<std::vector<Vec2D>> particles = loadFile(argv[1], ups, maxSteps, particleCount, radii);
+	std::vector<sf::ConvexShape> lines;
+	std::vector<std::vector<Vec2D>> particles = loadFile(argv[1], ups, maxSteps, particleCount, radii, lines);
 	if (particles.size() == 0) return -1;
 
 	sf::RenderWindow window(sf::VideoMode(1280, 720), "Particle Simulator Viewer");
-	window.setFramerateLimit(ups);
+	window.setFramerateLimit(60);
 
 	sf::View camera = window.getDefaultView();
 
 	sf::CircleShape particleCircle;
 	particleCircle.setOrigin(sf::Vector2f(0, 0));
-	particleCircle.setFillColor(sf::Color(255, 255, 255));
+	particleCircle.setFillColor(sf::Color(255, 195, 54));
 	particleCircle.setRadius(1);
 
 	sf::Font font;
@@ -120,6 +121,10 @@ int main(int argc, char* argv[]) {
 			particleCircle.setPosition(newPos.x, newPos.y);
 			particleCircle.setRadius(radius);
 			window.draw(particleCircle);
+		}
+
+		for (auto& i : lines) {
+			window.draw(i);
 		}
 
 		currentStep += speed;

@@ -97,4 +97,12 @@ public:
 	static double cross(const Vec2D& v1, const Vec2D& v2) {
 		return (v1.x * v2.y) - (v1.y * v2.x);
 	}
+
+	static double bearing(const Vec2D& v1, const Vec2D& v2) {
+    double TWOPI = 6.2831853071795865;
+    double theta = std::atan2(v2.x - v1.x, v1.y - v2.y);
+    if (theta < 0.0)
+        theta += TWOPI;
+    return theta;
+	}
 };

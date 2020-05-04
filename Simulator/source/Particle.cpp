@@ -4,7 +4,7 @@ Particle::Particle() {
 	position = Vec2D();
 	velocity = Vec2D();
 	acceleration = Vec2D();
-	mass = 5;
+	mass = 2;
 	radius = 1;
 }
 
@@ -22,9 +22,19 @@ void Particle::updatePhysics(double timeStep) {
 	if (simTimeRemaining > 0.0) {
 		oldPosition = position;
 
-		velocity += (acceleration * (1.0/mass)) * simTimeRemaining;
-		if (affectedByDrag)
-			velocity *= 0.98;
+		/*if (affectedByDrag) {
+			acceleration.x += -velocity.x * 0.99;
+			acceleration.y += -velocity.y * 0.99;
+		}*/
+
+		velocity += acceleration * simTimeRemaining;
+		if (affectedByDrag) 
+			velocity = velocity * (1 - simTimeRemaining * 0.3);
+
+		if (velocity.rawLen() < 0.05) {
+			velocity = Vec2D();
+		}
+
 		position += velocity * simTimeRemaining;
 		acceleration = Vec2D();
 	}

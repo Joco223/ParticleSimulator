@@ -18,7 +18,9 @@ const std::unordered_map<std::string, std::string> pair_types = {
 	{"updatesPerSecond", "int"},
 	{"simulationTime", "int"},
 	{"templateFile", "string"},
-	{"gravity", "bool"}
+	{"gravity", "bool"},
+	{"simulationSplits", "int"},
+	{"maxIterations", "int"}
 };
 
 std::vector<std::pair<std::string, std::string>> read(std::string file_path) {

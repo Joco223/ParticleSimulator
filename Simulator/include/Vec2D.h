@@ -122,11 +122,11 @@ public:
 	}
 
 	static double bearing(const Vec2D& v1, const Vec2D& v2) {
-    static const double TWOPI = 6.2831853071795865;
-    static const double RAD2DEG = 57.2957795130823209;
+    double TWOPI = 6.2831853071795865;
+    double RAD2DEG = 57.2957795130823209;
     double theta = std::atan2(v2.x - v1.x, v1.y - v2.y);
     if (theta < 0.0)
         theta += TWOPI;
     return RAD2DEG * theta;
-}
+	}
 };

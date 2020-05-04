@@ -2,10 +2,11 @@
 #include <vector>
 #include <fstream>
 #include <iostream>
+#include <math.h>
 
 #include "Vec2D.h"
 
-std::vector<std::vector<Vec2D>> loadFile(const std::string input, int& ups, int& maxSteps, int& particleCount, std::vector<double>& radii) {
+std::vector<std::vector<Vec2D>> loadFile(const std::string input, int& ups, int& maxSteps, int& particleCount, std::vector<double>& radii, std::vector<sf::ConvexShape>& lines) {
 	std::vector<std::vector<Vec2D>> particles;
 	
 	std::ifstream input_file(input, std::ios::in);
@@ -22,6 +23,49 @@ std::vector<std::vector<Vec2D>> loadFile(const std::string input, int& ups, int&
 		double r;
 		input_file.read((char*)&r, sizeof(double));
 		radii.push_back(r);
+	}
+
+	int lineCount;
+	input_file.read((char*)&lineCount, sizeof(int));
+
+	for (int i = 0; i < lineCount; i++) {
+		double x, y, thickness;
+		input_file.read((char*)&x, sizeof(double));
+		input_file.read((char*)&y, sizeof(double));
+		sf::Vector2f start(x, y);
+
+		input_file.read((char*)&x, sizeof(double));
+		input_file.read((char*)&y, sizeof(double));
+		sf::Vector2f end(x, y);
+
+		input_file.read((char*)&thickness, sizeof(double));
+
+		sf::ConvexShape newLine;
+
+		double angle = Vec2D::bearing(Vec2D(start.x, start.y), Vec2D(end.x, end.y));
+		double currentAngle = angle + M_PI*2;
+		newLine.setPointCount(20);
+
+		for (int j = 0; j < 10; j++) {
+			double newX = thickness * std::cos(currentAngle) + start.x;
+			double newY = thickness * std::sin(currentAngle) + start.y;
+			newLine.setPoint(j, sf::Vector2f(newX, newY));
+
+			currentAngle += M_PI/10;
+		}
+
+		currentAngle = angle + M_PI*2;
+
+		for (int j = 0; j < 10; j++) {
+			double newX = thickness * std::cos(currentAngle) + end.x;
+			double newY = thickness * std::sin(currentAngle) + end.y;
+			newLine.setPoint(19-j, sf::Vector2f(newX, newY));
+
+			currentAngle -= M_PI/10;
+		}
+
+		newLine.setFillColor(sf::Color(200, 200, 200));
+		lines.push_back(newLine);
 	}
 
 	for (int i = 0; i < maxSteps; i++) {

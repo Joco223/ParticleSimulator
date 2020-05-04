@@ -6,6 +6,11 @@
 #include <iostream>
 #include <cmath>
 
+struct line {
+	Vec2D start, end;
+	double thickness;
+};
+
 class Particle {
 public:
 	Vec2D position, oldPosition, velocity, acceleration;

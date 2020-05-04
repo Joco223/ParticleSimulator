@@ -8,10 +8,47 @@
 #include <algorithm>
 #include <vector>
 
-void resolveCollisions(std::vector<Particle*>& particles, QuadTree& qt) {
+void resolveCollisions(std::vector<Particle*>& particles, QuadTree& qt, std::vector<line>& lines) {
 	std::vector<std::pair<Particle*, Particle*>> collidingPairs;
+	std::vector<Particle*> fakeParticles;
 
 	//Resolve static collision
+	for (auto i : particles) {
+		for (auto& j : lines) {
+			double lineX1 = j.end.x - j.start.x;
+			double lineY1 = j.end.y - j.start.y;
+
+			double lineX2 = i->position.x - j.start.x;
+			double lineY2 = i->position.y - j.start.y;
+
+			double edgeLength = lineX1*lineX1 + lineY1*lineY1;
+
+			double t = std::max(0.0, std::min(edgeLength, (lineX1*lineX2 + lineY1*lineY2))) / edgeLength;
+		
+			Vec2D closestPoint(j.start.x + t * lineX1, j.start.y + t * lineY1);
+
+			double dist = closestPoint.dist(i->position);
+
+			//Line thickness is 5 temporarily
+			if (dist < i->radius + j.thickness) {
+				Particle* fakeParticle = new Particle;
+				fakeParticle->radius = j.thickness;
+				fakeParticle->mass = i->mass;
+				fakeParticle->position = closestPoint;
+				fakeParticle->velocity = i->velocity * -1;
+
+				fakeParticles.push_back(fakeParticle);
+				collidingPairs.push_back({i, fakeParticle});
+
+				double overlap = dist - i->radius - fakeParticle->radius;
+
+				i->position.x -= overlap * (i->position.x - fakeParticle->position.x) / dist;
+				i->position.y -= overlap * (i->position.y - fakeParticle->position.y) / dist;
+			}
+		}
+	}
+
+
 	for (auto i : particles) {
 		Rect target = {i->position, Vec2D(i->radius + 21, i->radius + 21)};
 		std::vector<Particle*> neighbours = qt.query(target);
@@ -72,6 +109,11 @@ void resolveCollisions(std::vector<Particle*>& particles, QuadTree& qt) {
 		b2->velocity.x = tx * dpTan2 + nx * m2;
 		b2->velocity.y = ty * dpTan2 + ny * m2;
 	}
+
+	for (auto i : fakeParticles)
+		delete i;
+	fakeParticles.clear();
+	collidingPairs.clear();
 }
 
 void applyGravity(std::vector<Particle*>& particles, double gravConst) {
@@ -109,31 +151,19 @@ void applyInverseGravity(std::vector<Particle*>& particles, QuadTree& qt, double
 }
 
 void applySpringForce(std::vector<Particle*>& particles, QuadTree& qt, double springConstant, double dampingConstant, double equiDistance, double maxDistance, double timeStep) {
-	/*for (auto i : particles) {
-		Rect target = {i->position, Vec2D(i->radius + maxDistance, i->radius + maxDistance)};
-		std::vector<Particle*> neighbours = qt.query(target);
-		for (auto j : neighbours) {
-			if (i->id != j->id) {
-				//double force = -springConstant * (i->position.dist(j->position) - equiDistance) - dampingConstant * (j->velocity - i->velocity).len();
-				double m = (j->mass*i->mass) / (j->mass + i->mass);
-				double force = -(m/(timeStep*timeStep))*springConstant*((i->position-j->position).len() - equiDistance) - (m/timeStep)*dampingConstant*(j->velocity-i->velocity).len();
-				Vec2D accForce = (i->position - j->position).fastNorm() * force;
-				j->acceleration -= accForce;
-			}
-		}
-	}*/
-
 	for (int i = 0; i < particles.size(); i++) {
 		if (particles[i]->affectedBySprings) {
 			for (int j = i + 1; j < particles.size(); j++) {
-				if (particles[j]->affectedBySprings) {
+				if (particles[j]->affectedBySprings && particles[i]->type == particles[j]->type) {
 					double dist = particles[i]->position.dist(particles[j]->position);
 					if (dist < maxDistance) {
-						double m = (particles[j]->mass*particles[i]->mass) / (particles[j]->mass + particles[i]->mass);
-						double force = -(m/(timeStep*timeStep))*springConstant*((particles[i]->position-particles[j]->position).len() - equiDistance) - (m/timeStep)*dampingConstant*(particles[j]->velocity-particles[i]->velocity).len();
-						Vec2D accForce = (particles[i]->position - particles[j]->position).fastNorm() * force;
-						particles[j]->acceleration -= accForce/2;
-						particles[i]->acceleration += accForce/2;
+						Vec2D springDir = (particles[j]->position - particles[i]->position).fastNorm();
+						double goalDist = 0.5*dist - 0.5*equiDistance;
+						double goalSpeed = springConstant * (goalDist / timeStep);
+						double dampingSpeed = dampingConstant * (equiDistance / dist);
+
+						particles[j]->velocity -= springDir * ((goalSpeed - dampingSpeed) * timeStep);
+						particles[i]->velocity += springDir * ((goalSpeed - dampingSpeed) * timeStep);
 					}
 				}
 			}
@@ -141,4 +171,8 @@ void applySpringForce(std::vector<Particle*>& particles, QuadTree& qt, double sp
 	}
 }
 
-// F = -k(|x|-d)(x/|x|) - bv
+void applyGlobalGravity(std::vector<Particle*>& particles, double gravConstant) {
+	for (auto i : particles) {
+		i->acceleration.y += gravConstant * i->mass;
+	}
+}
