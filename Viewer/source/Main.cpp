@@ -1,5 +1,6 @@
 #include <iostream>
 #include <SFML/Graphics.hpp>
+#include <SFML/OpenGL.hpp>
 #include <fstream>
 #include <vector>
 #include <cmath>
@@ -45,6 +46,22 @@ int main(int argc, char* argv[]) {
 	float oldSpeed = speed;
 
 	std::vector<bool> keysPressed = {false, false, false, false}; //Left, Right, Up, Down
+
+	sf::Shader metaBallsShader;
+	metaBallsShader.loadFromFile("../source/MetaBalls.frag", sf::Shader::Fragment);
+	sf::RectangleShape metaBallsRect;
+	metaBallsRect.setTextureRect(sf::IntRect(sf::Vector2i(0, 0), sf::Vector2i(1, 1)));
+	metaBallsRect.setPosition(sf::Vector2f(0, 0));
+	metaBallsRect.setSize(sf::Vector2f(1280, 720));
+	metaBallsShader.setUniform("ballCount", particleCount);
+	sf::Glsl::Vec2 metaBallsPositions[particleCount];
+	float ballRadii[particleCount];
+
+	for (int i = 0; i < particleCount; i++) {
+		ballRadii[i] = radii[i];
+	}
+
+	metaBallsShader.setUniformArray("metaBallsRadii", ballRadii, particleCount);
 
 	while (window.isOpen()) {
 		sf::Event Event;
@@ -116,12 +133,19 @@ int main(int argc, char* argv[]) {
 		window.clear();
 
 		for (int i = 0; i < particleCount; i++) {
+
 			double radius = radii[i];
-			Vec2D newPos = getParticlePos(currentStep, i, particles) - Vec2D(radius, radius);
-			particleCircle.setPosition(newPos.x, newPos.y);
-			particleCircle.setRadius(radius);
-			window.draw(particleCircle);
+			Vec2D newPos = (getParticlePos(currentStep, i, particles) - Vec2D(radius, radius));
+			//newPos.x = 1280 - newPos.x;
+			//sf::Vector2i converted = window.mapCoordsToPixel(sf::Vector2f(newPos.x, newPos.y));
+			metaBallsPositions[i] = sf::Glsl::Vec2(newPos.x, newPos.y);
+			//particleCircle.setPosition(newPos.x, newPos.y);
+			//particleCircle.setRadius(radius);
+			//window.draw(particleCircle);
 		}
+
+		metaBallsShader.setUniformArray("metaBalls", metaBallsPositions, particleCount);
+		window.draw(metaBallsRect, &metaBallsShader);
 
 		for (auto& i : lines) {
 			window.draw(i);

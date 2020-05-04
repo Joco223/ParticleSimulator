@@ -163,7 +163,7 @@ int main(int argc, char** argv) {
 			
 
 			for (int j = 0; j < maxSimulationSteps; j++) {		
-				applySpringForce(particles, qt, 5, 15, 3, 4, elapsedTime);
+				applySpringForce(particles, qt, 15, 40, 3, 4, elapsedTime);
 
 				for (int i = 0; i < particles.size(); i++) {			
 					particles[i]->updatePhysics(elapsedTime);

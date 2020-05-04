@@ -66,13 +66,19 @@ public:
 		return *this;
 	}
 
-		Vec2D operator/(const double scale) {
+	Vec2D operator/(const double scale) {
 		return Vec2D(x/scale, y/scale);
 	}
 
 	Vec2D& operator/=(const double other) {
 		x /= other;
 		y /= other;
+		return *this;
+	}
+
+	Vec2D& operator/(const Vec2D& other) {
+		x /= other.x;
+		y /= other.y;
 		return *this;
 	}
 
