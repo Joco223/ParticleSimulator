@@ -64,16 +64,17 @@ int main(int argc, char** argv) {
 	lines.push_back({Vec2D(0, 720), Vec2D(1280, 720), 3});
 	lines.push_back({Vec2D(0, 0), Vec2D(0, 720), 3});
 	lines.push_back({Vec2D(1280, 0), Vec2D(1280, 720), 3});
+	lines.push_back({Vec2D(150, 400), Vec2D(900, 900), 3});
 
 	//Testing
 
 	for (int y = 0; y < 10; y++) {
 		for (int x = 0; x < 10; x++) {
 			Particle* new_particle = new Particle;
-			Vec2D pos = Vec2D(x * 3 + 200, y * 3 + 600);
+			Vec2D pos = Vec2D(x * 2.5 + 200, y * 2.5 + 300);
 			new_particle->position = pos;
 			if (x % 2 == 0)
-				new_particle->position += Vec2D(0, 1.5);
+				new_particle->position += Vec2D(0, 1.25);
 			new_particle->id = y * 10 + x;
 			new_particle->radius = 1;
 			new_particle->affectedByDrag = true;
@@ -81,7 +82,7 @@ int main(int argc, char** argv) {
 		}
 	}
 
-	for (int y = 0; y < 10; y++) {
+	/*for (int y = 0; y < 10; y++) {
 		for (int x = 0; x < 10; x++) {
 			Particle* new_particle = new Particle;
 			Vec2D pos = Vec2D(x * 3 + 1000, y * 3 + 585);
@@ -94,7 +95,7 @@ int main(int argc, char** argv) {
 			new_particle->affectedByDrag = true;
 			particles.push_back(new_particle);
 		}
-	}
+	}*/
 
 	/*Particle* bigOne = new Particle;
 	bigOne->position = Vec2D(100, 215);
@@ -145,25 +146,16 @@ int main(int argc, char** argv) {
 		//applyGravity(particles, 3);
 		//applyInverseGravity(particles, qt, 100);
 
-		if (currentStep == 1200) {
-			for (int i = 0; i < 100; i++) {
-				particles[i]->velocity = Vec2D(200, 0);
-			}
-			for (int i = 100; i < 200; i++) {
-				particles[i]->velocity = Vec2D(-200, 0);
-			}
-		}
-
 		for (int k = 0; k < simulationUpdates; k++) {
 			for (auto i : particles)
 				i->simTimeRemaining = elapsedTime;
 
 			
-			//applyGlobalGravity(particles, 100);
+			applyGlobalGravity(particles, 100);
 			
 
 			for (int j = 0; j < maxSimulationSteps; j++) {		
-				applySpringForce(particles, qt, 15, 40, 3, 4, elapsedTime);
+				applySpringForce(particles, qt, 25, 85, 2.5, 3.5, elapsedTime);
 
 				for (int i = 0; i < particles.size(); i++) {			
 					particles[i]->updatePhysics(elapsedTime);

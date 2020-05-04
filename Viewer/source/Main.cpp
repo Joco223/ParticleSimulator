@@ -28,11 +28,6 @@ int main(int argc, char* argv[]) {
 
 	sf::View camera = window.getDefaultView();
 
-	sf::CircleShape particleCircle;
-	particleCircle.setOrigin(sf::Vector2f(0, 0));
-	particleCircle.setFillColor(sf::Color(255, 195, 54));
-	particleCircle.setRadius(1);
-
 	sf::Font font;
 	font.loadFromFile("arial.ttf");
 
@@ -40,7 +35,8 @@ int main(int argc, char* argv[]) {
 	text.setFont(font);
 
 	float currentStep = 0;
-	float speed = 1.0f;
+	float speed = (float)ups / 60.0f;
+	float fakeSpeed = 1.0f;
 	float scale = 1.0f;
 	float textScale = 1.0f;
 	float oldSpeed = speed;
@@ -62,6 +58,7 @@ int main(int argc, char* argv[]) {
 	}
 
 	metaBallsShader.setUniformArray("metaBallsRadii", ballRadii, particleCount);
+	bool paused = false;
 
 	while (window.isOpen()) {
 		sf::Event Event;
@@ -69,10 +66,12 @@ int main(int argc, char* argv[]) {
 			if (Event.type == sf::Event::Closed) {
 				window.close();
 			}else if (Event.type == sf::Event::KeyPressed) {
-				if (sf::Keyboard::isKeyPressed(sf::Keyboard::Period) && std::abs(speed) < 256) {
+				if (sf::Keyboard::isKeyPressed(sf::Keyboard::Period) && std::abs(fakeSpeed) < 256) {
 					speed *= 2;
-				}else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Comma) && std::abs(speed) > 0.03125f) {
+					fakeSpeed *= 2;
+				}else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Comma) && std::abs(fakeSpeed) > 0.03125f) {
 					speed /= 2;
+					fakeSpeed /= 2;
 				}
 
 				if (sf::Keyboard::isKeyPressed(sf::Keyboard::N) && scale < 16) {
@@ -89,13 +88,12 @@ int main(int argc, char* argv[]) {
 					speed = -speed;
 				}
 
+				if (sf::Keyboard::isKeyPressed(sf::Keyboard::F)) {
+					currentStep = 0;
+				}
+
 				if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space)) {
-					if (speed == 0) {
-						speed = oldSpeed;
-					}else{
-						oldSpeed = speed;
-						speed = 0;
-					}
+					paused = !paused;
 				}
 
 				if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left)) 
@@ -132,16 +130,18 @@ int main(int argc, char* argv[]) {
 		window.setView(camera);
 		window.clear();
 
-		for (int i = 0; i < particleCount; i++) {
+		if (!paused) {
+				for (int i = 0; i < particleCount; i++) {
+				double radius = radii[i];
+				Vec2D newPos = (getParticlePos(currentStep, i, particles) - Vec2D(radius, radius));
+				metaBallsPositions[i] = sf::Glsl::Vec2(newPos.x, newPos.y);
+			}
 
-			double radius = radii[i];
-			Vec2D newPos = (getParticlePos(currentStep, i, particles) - Vec2D(radius, radius));
-			//newPos.x = 1280 - newPos.x;
-			//sf::Vector2i converted = window.mapCoordsToPixel(sf::Vector2f(newPos.x, newPos.y));
-			metaBallsPositions[i] = sf::Glsl::Vec2(newPos.x, newPos.y);
-			//particleCircle.setPosition(newPos.x, newPos.y);
-			//particleCircle.setRadius(radius);
-			//window.draw(particleCircle);
+			currentStep += speed;
+
+			if (currentStep > maxSteps-1) { currentStep = 0; }
+
+			if (currentStep < 0) { currentStep = maxSteps-1;}
 		}
 
 		metaBallsShader.setUniformArray("metaBalls", metaBallsPositions, particleCount);
@@ -151,15 +151,9 @@ int main(int argc, char* argv[]) {
 			window.draw(i);
 		}
 
-		currentStep += speed;
-
-		if (currentStep > maxSteps-1) { currentStep = 0; }
-
-		if (currentStep < 0) { currentStep = maxSteps-1;}
-
 		std::cout << currentStep << '/' << maxSteps << '\r';
 
-		text.setString("Speed: " + std::to_string((int)std::floor(speed*100)) + "%\nScale: " + std::to_string((int)std::floor(textScale*100)) + "%\nTime: " + std::to_string(std::ceil((currentStep/ups)*100)/100).substr(0, 4) + "s/" + std::to_string((int)maxSteps/ups) + "s");
+		text.setString("Speed: " + std::to_string((int)std::floor(fakeSpeed*100)) + "%\nScale: " + std::to_string((int)std::floor(textScale*100)) + "%\nTime: " + std::to_string(std::ceil((currentStep/ups)*100)/100).substr(0, 4) + "s/" + std::to_string((int)maxSteps/ups) + "s");
 		window.setView(window.getDefaultView());
 		window.draw(text);
 
