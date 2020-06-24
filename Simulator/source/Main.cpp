@@ -141,15 +141,15 @@ int main(int argc, char** argv) {
 	
 		for (auto& i : particles) {
 			if (currentStep < 4800) {
-				i->heat += 0.5;
+				i->heat += 0.41;
 			}else if (currentStep > 5400 && i->heat > 1) {
-				i->heat -= 0.5;
+				i->heat -= 0.41;
 			}
 			qt.insert(i);
 		}
 
 		//applyGravity(particles, 3);
-		applyInverseGravity(particles, qt, 100);
+		applyInverseGravity(particles, qt, 1000);
 
 		for (int k = 0; k < simulationUpdates; k++) {
 			for (auto i : particles)
@@ -165,7 +165,7 @@ int main(int argc, char** argv) {
 			
 
 			for (int j = 0; j < maxSimulationSteps; j++) {		
-				applySpringForce(particles, qt, 10, 40, 2.5, 3.5, elapsedTime);
+				applySpringForce(particles, qt, 15, 65, 2.5, 3.5, elapsedTime);
 
 				for (int i = 0; i < particles.size(); i++) {			
 					particles[i]->updatePhysics(elapsedTime);

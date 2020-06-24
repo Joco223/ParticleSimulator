@@ -140,7 +140,7 @@ void applyGravity(std::vector<Particle*>& particles, double gravConst) {
 }
 
 void applyInverseGravity(std::vector<Particle*>& particles, QuadTree& qt, double invGravConst) {
-	for (auto i : particles) {
+	/*for (auto i : particles) {
 		Rect target = {i->position, Vec2D(i->radius + 20, i->radius + 20)};
 		std::vector<Particle*> neighbours = qt.query(target);
 		for (auto j : neighbours) {
@@ -149,6 +149,25 @@ void applyInverseGravity(std::vector<Particle*>& particles, QuadTree& qt, double
 				double force = std::max(0.0, invGravConst * distance);
 				Vec2D accForce = ((i->position - j->position).fastNorm() * force);
 				i->acceleration += accForce;
+			}
+		}
+	}*/
+
+	for (int i = 0; i < particles.size(); i++) {
+		if (particles[i]->affectedByGravity) {
+			for (int j = i + 1; j < particles.size(); j++) {
+				if (particles[j]->affectedByGravity) {
+					Particle* p1 = particles[i];
+					Particle* p2 = particles[j];
+					
+					double distance = p1->position.rawDist(p2->position);
+					double force1 = std::max(0.0, (invGravConst * p1->mass * p2->mass) * (1.0 / (distance / ((p1->heat - p1->boilingPoint) / (p1->viscosity*50.0)))));
+					double force2 = std::max(0.0, (invGravConst * p1->mass * p2->mass) * (1.0 / (distance / ((p2->heat - p2->boilingPoint) / (p2->viscosity*50.0)))));
+					Vec2D accForce1 = ((p1->position - p2->position).fastNorm() * force1);
+					Vec2D accForce2 = ((p1->position - p2->position).fastNorm() * force2);
+					p1->acceleration += accForce1;
+					p2->acceleration -= accForce2;
+				}		
 			}
 		}
 	}
