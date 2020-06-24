@@ -6,6 +6,10 @@ Particle::Particle() {
 	acceleration = Vec2D();
 	mass = 2;
 	radius = 1;
+	heat = 0;
+	meltingPoint = 600;
+	boilingPoint = 1200;
+	viscosity = 1;
 }
 
 bool Particle::detectCollision(const Particle* other) {
@@ -22,10 +26,10 @@ void Particle::updatePhysics(double timeStep) {
 	if (simTimeRemaining > 0.0) {
 		oldPosition = position;
 
-		/*if (affectedByDrag) {
+		if (affectedByDrag) {
 			acceleration.x += -velocity.x * 0.99;
 			acceleration.y += -velocity.y * 0.99;
-		}*/
+		}
 
 		velocity += acceleration * simTimeRemaining;
 		if (affectedByDrag) 

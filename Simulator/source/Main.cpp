@@ -61,17 +61,17 @@ int main(int argc, char** argv) {
 	double timeStep = 1.0 / (double)ups;
 	std::vector<Particle*> particles;
 	std::vector<line> lines;
-	lines.push_back({Vec2D(0, 720), Vec2D(1280, 720), 3});
-	lines.push_back({Vec2D(0, 0), Vec2D(0, 720), 3});
-	lines.push_back({Vec2D(1280, 0), Vec2D(1280, 720), 3});
-	lines.push_back({Vec2D(150, 400), Vec2D(900, 900), 3});
+	lines.push_back({Vec2D(200, 200), Vec2D(250, 200), 2});
+	lines.push_back({Vec2D(200, 200), Vec2D(200, 450), 2});	
+	lines.push_back({Vec2D(200, 450), Vec2D(250, 450), 2});
+	lines.push_back({Vec2D(250, 200), Vec2D(250, 450), 2});
 
 	//Testing
 
 	for (int y = 0; y < 10; y++) {
 		for (int x = 0; x < 10; x++) {
 			Particle* new_particle = new Particle;
-			Vec2D pos = Vec2D(x * 2.5 + 200, y * 2.5 + 300);
+			Vec2D pos = Vec2D(x * 2.5 + 205, y * 2.5 + 205);
 			new_particle->position = pos;
 			if (x % 2 == 0)
 				new_particle->position += Vec2D(0, 1.25);
@@ -140,22 +140,32 @@ int main(int argc, char** argv) {
 		QuadTree qt({Vec2D(0, 0), Vec2D(1280, 720)});
 	
 		for (auto& i : particles) {
+			if (currentStep < 4800) {
+				i->heat += 0.5;
+			}else if (currentStep > 5400 && i->heat > 1) {
+				i->heat -= 0.5;
+			}
 			qt.insert(i);
 		}
 
 		//applyGravity(particles, 3);
-		//applyInverseGravity(particles, qt, 100);
+		applyInverseGravity(particles, qt, 100);
 
 		for (int k = 0; k < simulationUpdates; k++) {
 			for (auto i : particles)
 				i->simTimeRemaining = elapsedTime;
-
 			
-			applyGlobalGravity(particles, 100);
+			if (currentStep < 4800) {
+				applyGlobalGravity(particles, 100, false);
+			}else if (currentStep > 4800 && currentStep < 10200) {
+				applyGlobalGravity(particles, 100, true);
+			}else{
+				applyGlobalGravity(particles, 100, false);
+			}
 			
 
 			for (int j = 0; j < maxSimulationSteps; j++) {		
-				applySpringForce(particles, qt, 25, 85, 2.5, 3.5, elapsedTime);
+				applySpringForce(particles, qt, 10, 40, 2.5, 3.5, elapsedTime);
 
 				for (int i = 0; i < particles.size(); i++) {			
 					particles[i]->updatePhysics(elapsedTime);

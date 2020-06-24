@@ -32,11 +32,11 @@ std::vector<std::vector<Vec2D>> loadFile(const std::string input, int& ups, int&
 		double x, y, thickness;
 		input_file.read((char*)&x, sizeof(double));
 		input_file.read((char*)&y, sizeof(double));
-		sf::Vector2f start(x, y);
+		sf::Vector2f start(x - 1, y - 1);
 
 		input_file.read((char*)&x, sizeof(double));
 		input_file.read((char*)&y, sizeof(double));
-		sf::Vector2f end(x, y);
+		sf::Vector2f end(x - 1, y - 1);
 
 		input_file.read((char*)&thickness, sizeof(double));
 

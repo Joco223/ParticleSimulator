@@ -29,7 +29,6 @@ void resolveCollisions(std::vector<Particle*>& particles, QuadTree& qt, std::vec
 
 			double dist = closestPoint.dist(i->position);
 
-			//Line thickness is 5 temporarily
 			if (dist < i->radius + j.thickness) {
 				Particle* fakeParticle = new Particle;
 				fakeParticle->radius = j.thickness;
@@ -116,6 +115,11 @@ void resolveCollisions(std::vector<Particle*>& particles, QuadTree& qt, std::vec
 	collidingPairs.clear();
 }
 
+double cosineLerp(double p1, double p2, double m) {
+	double m2 = (1.0 - cos(m * 3.141593)) / 2.0;
+	return(p1 * (1.0 - m2) + p2 * m2);
+}
+
 void applyGravity(std::vector<Particle*>& particles, double gravConst) {
 	for (int i = 0; i < particles.size(); i++) {
 		if (particles[i]->affectedByGravity) {
@@ -141,8 +145,8 @@ void applyInverseGravity(std::vector<Particle*>& particles, QuadTree& qt, double
 		std::vector<Particle*> neighbours = qt.query(target);
 		for (auto j : neighbours) {
 			if (i->id != j->id) {
-				double distance = 2.0 / i->position.dist(j->position);
-				double force = invGravConst * distance;
+				double distance = 1.0 / (i->position.dist(j->position) / ((i->heat - i->boilingPoint) / (i->viscosity*75.0)));
+				double force = std::max(0.0, invGravConst * distance);
 				Vec2D accForce = ((i->position - j->position).fastNorm() * force);
 				i->acceleration += accForce;
 			}
@@ -162,8 +166,13 @@ void applySpringForce(std::vector<Particle*>& particles, QuadTree& qt, double sp
 						double goalSpeed = springConstant * (goalDist / timeStep);
 						double dampingSpeed = dampingConstant * (equiDistance / dist);
 
-						particles[j]->velocity -= springDir * ((goalSpeed - dampingSpeed) * timeStep);
-						particles[i]->velocity += springDir * ((goalSpeed - dampingSpeed) * timeStep);
+						double m1 = std::min(1.0, (particles[i]->heat / particles[i]->meltingPoint));
+						double springStengthI = cosineLerp(1.0, 0.0, m1)*particles[i]->viscosity;
+						double m2 = std::min(1.0, (particles[j]->heat / particles[j]->meltingPoint));
+						double springStengthJ = cosineLerp(1.0, 0.0, m2)*particles[j]->viscosity;
+
+						particles[j]->velocity -= springDir * ((goalSpeed - dampingSpeed) * timeStep) * springStengthI;
+						particles[i]->velocity += springDir * ((goalSpeed - dampingSpeed) * timeStep) * springStengthJ;
 					}
 				}
 			}
@@ -171,8 +180,12 @@ void applySpringForce(std::vector<Particle*>& particles, QuadTree& qt, double sp
 	}
 }
 
-void applyGlobalGravity(std::vector<Particle*>& particles, double gravConstant) {
+void applyGlobalGravity(std::vector<Particle*>& particles, double gravConstant, bool up = false) {
 	for (auto i : particles) {
-		i->acceleration.y += gravConstant * i->mass;
+		if (!up) {
+			i->acceleration.y += gravConstant * i->mass;
+		}else{
+			i->acceleration.y -= gravConstant * i->mass;
+		}		
 	}
 }

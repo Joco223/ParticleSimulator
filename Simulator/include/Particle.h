@@ -14,7 +14,8 @@ struct line {
 class Particle {
 public:
 	Vec2D position, oldPosition, velocity, acceleration;
-	double mass, radius, simTimeRemaining;
+	double mass, radius, simTimeRemaining, heat;
+	double meltingPoint, boilingPoint, viscosity;
 	int type = 0; //Will be used later on for visualizer
 	int id;
 	bool affectedByGravity = true;
